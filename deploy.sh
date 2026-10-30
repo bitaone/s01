@@ -4,7 +4,8 @@ set -e
 # --- CONFIGURATION ---
 REGION="us-central1"
 REGION="asia-east2"
-RUNTIME="go122"
+REGION="europe-west1"
+RUNTIME="go126"
 
 # 1. Retrieve Active GCP Project ID
 PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
@@ -41,6 +42,7 @@ fi
 # 4. Deploy Function 'c' (from c.go) with Free Tier Caps & In-Region Egress Control
 echo "------------------------------------------"
 echo "Deploying 'c' (Entry Point: ProcessRequest)..."
+cd c
 gcloud functions deploy c \
   --gen2 \
   --region="$REGION" \
@@ -55,9 +57,12 @@ gcloud functions deploy c \
   --egress-settings=private-ranges-only \
   --set-env-vars GCP_PROJECT="$PROJECT_ID"
 
+cd ..
+
 # 5. Deploy Function 'h' (from h.go) with Free Tier Caps & In-Region Egress Control
 echo "------------------------------------------"
 echo "Deploying 'h' (Entry Point: ProcessHRequest)..."
+cd h
 gcloud functions deploy h \
   --gen2 \
   --region="$REGION" \
@@ -69,12 +74,15 @@ gcloud functions deploy h \
   --memory=256Mi \
   --max-instances=1 \
   --concurrency=1 \
-  --egress-settings=private-ranges-only \
+#  --egress-settings=private-ranges-only \
   --set-env-vars GCP_PROJECT="$PROJECT_ID"
+
+cd ..
 
 # 6. Deploy Function 'v' (from v.go) with Free Tier Caps & In-Region Egress Control
 echo "------------------------------------------"
 echo "Deploying 'v' (Entry Point: RenderDashboard)..."
+cd v
 gcloud functions deploy v \
   --gen2 \
   --region="$REGION" \
@@ -88,6 +96,8 @@ gcloud functions deploy v \
   --concurrency=1 \
   --egress-settings=private-ranges-only \
   --set-env-vars GCP_PROJECT="$PROJECT_ID"
+
+cd ..
 
 # 7. Apply Service Quota Overrides for Free Tier Boundaries & Outbound Data Limits
 echo "------------------------------------------"
